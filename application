@@ -1,0 +1,17 @@
+#!/usr/bin/python
+
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "vendor"))
+
+from flask import Flask
+
+application = Flask(__name__)
+
+@application.route("/")
+def root ():
+    return "okie dokie\n", "text/plain; charset=utf-8"
+
+if __name__ == "__main__":
+    application.run()
