@@ -3,7 +3,7 @@ jelastic python
 
 Essa semana me foi dado a tarefa de testar o suporte a python no
 Jelastic da locaweb. Nada muito rebuscado, apenas criar uma aplicação
-web e relatar a experiência. Será bem interessanto pois será o meu
+web e relatar a experiência. Será bem interessante pois será o meu
 primeiro contato com o Jelastic.
 
 Para quem ainda não conhece, o Jelastic é um PaaS (do inglês
@@ -14,17 +14,16 @@ dados, cache e balanceadores de carga. Tudo isso com alguns cliques de
 botão. Propaganda a parte, vamos ao projeto.
 
 Minha ideia foi criar uma *API REST* para o famoso e antigo jogo da
-velha. É um jogo com regras simples e imagino que não necessita
-introdução, mas caso alguém tenha esquecido de como funciona o artigo
-da Wikipedia [1] é uma boa referência.
+velha. É um jogo com regras simples que dispensam comentários, mas
+caso alguém tenha esquecido de como funciona o artigo da Wikipedia [1]
+é uma boa referência.
 
 Vou começar criando um projeto no github [2]. Não é necessário visto
 que existem outros métodos de publicação mas simplifica
 consideravelmente todo o processo. Todo o código deste artigo está
-publicado neste repositório e pode ser usado como referência.
+publicado neste repositório e pode ser usado como referência:
 
     $ git clone https://github.com/dgvncsz0f/tic-tac-toe.git
-    $ cd tic-tac-toe
 
 Neste projeto específico vou usar *flask*, que é um *framework* leve
 para criar serviços HTTP. Vou deixá-lo no repositório, tornando-o
@@ -33,13 +32,10 @@ necessita para ser executado:
 
     $ pip install --target vendor flask
     $ pip install --target vendor redis
-    $ git add vendor
-    $ git commit -m 'adiciona a lib flask e redis no diretório vendor'
 
 Feito isso é hora de criar a aplicação. Agora vou apenas definir o
 esqueleto, sem adicionar nenhuma funcionalidade:
 
-    $ cat <<ENDL >application
     #!/usr/bin/python
      
     import os
@@ -56,16 +52,13 @@ esqueleto, sem adicionar nenhuma funcionalidade:
      
     if __name__ == "__main__":
         application.run()
-    ENDL
-
-    $ git add application
-    $ git commit -m 'arquivo application com rota / retornando uma string constante'
 
 É importante entender este código antes de seguir adiante. A primeira
-parte deste código adiciona o diretório *vendor* no *PATH* do
-python. Assim, o interpretador será capaz de encontrar o *flask* e o
-*redis* que instalamos na raiz do projeto:
+parte adiciona o diretório *vendor* e o *HOME* do usuário no *PATH* do
+python. Assim, o interpretador será capaz de encontrar o *flask*,
+*redis* e o código do jogo da velha que instalamos na raiz do projeto:
 
+    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "vendor"))
 
 A partir daí, já podemos testar nosso código. Basta executar o módulo
@@ -82,28 +75,25 @@ ambiente seguido pelo projeto. O ambiente permite o usuário escolher a
 versão do python que se deseja usar (neste caso 2.7) e o projeto
 determina como o código é publicado. Neste caso específico o próprio
 Jelastic continuamente monitora o github e já faz a publicação sempre
-que houver uma mudança no código, convenientemente.
+que houver uma mudança no código, o que é bem convenientemente.
 
-Também vou precisar de um banco de dados para manter estado dos jogos
-em andamento, que neste caso será o redis.
+Este projeto também requer um banco de dados para manter estado dos
+jogos em andamento, que neste caso será o redis.
 
     [[ screenshot ]]
 
-Tudo muito simples e rápido até agora vamos finalmente criar o jogo. O
-servidor será responsável por manter o estado dos jogos em
-andamento. Para simplificar as coisas vamos assumir um cenário
-perfeito no qual os jogadores são 100% honestos.
+Tudo muito simples e rápido até agora e já temos o ambiente necessário
+para publicar o jogo: um servidor com suporte a especificação *wsgi*
+do python e um servidor de redis.
 
 O módulo mais importante é o `tictactoe.game`. Este módulo contém o
-estado do jogo e métodos importantes como verificar se há algum
-ganhador ou o próximo jogador. Há outros dois módulos importantes, o
-`tictactoe.pp` que cuida de imprimir o estado do jogo num formato
-fácil de interpretar e o módulo `tictactoe.db` que é a interface para
-o banco de dados.
+estado do jogo e métodos que permitem modificar ou verificar o estado
+atual.
 
-O estado do jogo é mantido como um `array` de 9 posições. Cada item
-desta estrutura pode assumir três posições: `'x'`, `'o`' ou `None` que
-significam respectivamente jogador 1, jogador 2 ou área em aberto:
+Este estado é mantido como um `array` de 9 posições. Ao longo do
+tempo, cada item desta estrutura pode assumir três posições: `'x'`,
+`'o`' ou `None` que significam respectivamente jogador 1, jogador 2 ou
+área em aberto. Inicialmente todos os valores são `None`:
 
     def __init__ (self, state=None):
         if state is None:
@@ -143,8 +133,11 @@ Ficou faltando o método auxiliar `has_winner_`, descrito a seguir:
 
 Com isso temos um modelo básico do jogo da velha. Foram omitidas
 algumas linhas principalmente relacionadas a manter a invariante do
-jogo, aqueles mais curiosos vão encontrar o código completo, bem como
-uma conjunto básico de testes no github.
+jogo.
+
+Outro módulo bem importante é o `tictactoe.db` que persiste os
+jogos. Além disso ele mostra como definir e usar um arquivo de
+configuração no Jelastic.
 
 É chegada a hora de implementar a *API REST*. Vamos definir 4
 recursos, detalhados a seguir:
