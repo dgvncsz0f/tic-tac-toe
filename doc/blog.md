@@ -1,5 +1,5 @@
-jelastic python
-===============
+jelastic e python na locaweb
+============================
 
 Essa semana me foi dado a tarefa de testar o suporte a python no
 Jelastic da locaweb. Nada muito sofisticado, apenas criar uma
@@ -25,8 +25,8 @@ publicado neste repositório e pode ser usado como referência:
 
     $ git clone https://github.com/dgvncsz0f/tic-tac-toe.git
 
-Neste projeto específico vou usar *flask*, que é um *framework* leve
-para criar serviços HTTP. Vou deixá-lo no repositório, tornando-o
+Neste projeto específico vou usar *flask* [3], que é um *framework*
+leve para criar serviços HTTP. Vou deixá-lo no repositório, tornando-o
 auto-contido, ou seja, o projeto já contém todas as dependências que
 necessita para ser executado:
 
