@@ -5,13 +5,52 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "vendor"))
 
-from flask import Flask
+import json
+import flask
+from tictactoe import pp
+from tictactoe import db
+from tictactoe import game
 
-application = Flask(__name__)
+application = flask.Flask(__name__)
+application.debug = True
 
-@application.route("/")
-def root ():
-    return "okie dokie\n", "text/plain; charset=utf-8"
+def nl (s):
+    if not s.endswith("\n"):
+        s += "\n"
+    return(s)
+
+@application.route("/new", methods=["POST"])
+def new ():
+    key = db.create(db.instance())
+    return(nl(key), 201, {"content-type": "text/plain; charset=utf8"})
+
+@application.route("/play/<gameid>", methods=["POST"])
+def play (gameid):
+    g = game.TicTacToe(db.select(db.instance(), gameid))
+    u = g.next_turn1()
+    r = int(flask.request.form["row"], 10)
+    c = int(flask.request.form["col"], 10)
+    if g.winner():
+        code = 201
+    else:
+        g.play(r, c, u)
+        code = 201 if g.winner() else 202
+    db.update(db.instance(), gameid, g.dump())
+    return(nl(pp.pp(g.dump())), code, {"content-type": "text/plain; charset=utf8"})
+
+@application.route("/show/<gameid>", methods=["GET"])
+def show (gameid):
+    g = game.TicTacToe(db.select(db.instance(), gameid))
+    return(nl(pp.pp(g.dump())), 200, {"content-type": "text/plain; charset=utf-8"})
+
+@application.route("/show/<gameid>/winner", methods=["GET"])
+def winner (gameid):
+    g = game.TicTacToe(db.select(db.instance(), gameid))
+    u = g.winner()
+    if u:
+        return(nl(u), 200, {"content-type": "text/plain; charset=utf-8"})
+    else:
+        return("", 444)
 
 if __name__ == "__main__":
     application.run()
