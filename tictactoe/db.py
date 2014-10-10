@@ -1,3 +1,4 @@
+import os
 import json
 import uuid
 import redis
@@ -5,8 +6,19 @@ import redis
 class NotFound (Exception):
     pass
 
+def read_env ():
+    try:
+        with open(os.path.expanduser("~/etc/tictactoe-config.json"), "r") as fh:
+            return json.loads(fh.read(1024))
+    except IOError:
+        return {}
+
 def instance ():
-    return(redis.Redis())
+    env = read_env()
+    return redis.Redis(db = env.get("REDIS_DB", 0),
+                       host = env.get("REDIS_HOST", "127.0.0.1"),
+                       port = env.get("REDIS_POST", 6379),
+                       password = env.get("REDIS_PASS"))
 
 def create (db):
     k = str(uuid.uuid4())
