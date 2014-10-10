@@ -245,4 +245,34 @@ projeto publicado, podemos finalmente testar nosso joguinho:
     ---+---+---
      o |   |  
 
-E por aí vai!
+E isso conclui nossa pequena jornada exploratória do suporte a python
+no Jelastic.
+
+Considerações Finais
+====================
+
+O objetivo aqui foi mostrar o Jelastic e como ele pode ser usado com
+projetos python. Embora eu trabalhe na Locaweb, esta foi minha
+primeira experiência com a plataforma e honestamente fiquei bem
+satisfeito. É relativamente simples provisionar os recursos
+necessários para a maioria das aplicações.
+
+Um aspecto importante que foi negligenciado é a capacidade de
+dimensionar o ambiente. Isso significa que você pode começar pequeno,
+contratando poucas instâncias e aumentando a capacidade conforme a
+necessidade ou um teto de custo estabelecido.
+
+Outro ponto positivo foi a possibilidade de usar python sem
+praticamente nenhuma grande modificação: nesta foi apenas necessário
+modificar o `sys.path` do python. Isto é muito importante, pois
+significa a possibilidade de migrar qualquer projeto python para
+dentro ou fora Jelastic de maneira relativamente simples, dando muita
+liberdade de escolha.
+
+Claro que houve alguns pequenos problemas, que certamente serão
+solucionados rapidamente. Pessoalmente achei que a documentação deixou
+um pouco a desejar e não fui capaz de usar python3.3 ou python3.4. Mas
+no geral considero o saldo bem positivo!
+
+Por fim, o código encontra-se no meu github, caso haja algum
+interesse.
