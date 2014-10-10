@@ -80,14 +80,12 @@ obter o código a partir do github, instalando eventuais atualizações
 automaticamente, o que é bem conveniente. Este foi o motivo pelo qual
 escolhemos usar o github no início.
 
-Como este projeto também requer um banco de dados para manter estado
-dos jogos em andamento, também vamos instalar um redis nesse ambiente:
-
     [[ screenshot ]]
 
 Tudo muito simples e rápido até agora e já temos o ambiente necessário
-para publicar o jogo: um servidor com suporte a especificação *wsgi*
-do python e um servidor de redis. Feito isso, podemos executar:
+para publicar o jogo: um container com suporte a especificação *wsgi*
+do python e um redis. Feito isso, o seguinte comando não deve retornar
+nenhum erro:
 
     $ curl http://env-9190458.jelasticlw.com.br/
     okie dokie
@@ -101,6 +99,8 @@ tempo, cada item desta estrutura pode assumir três posições: `'x'`,
 `'o`' ou `None` que significam respectivamente jogador 1, jogador 2 ou
 posição em aberto. Inicialmente todos os valores são `None`:
 
+    # -- tictactoe/game.py --
+
     def __init__ (self, state=None):
         if state is None:
             state = [None for _ in range(9)]
@@ -108,6 +108,8 @@ posição em aberto. Inicialmente todos os valores são `None`:
     
 Com isso em mãos podemos implementar um método que verifica linhas e
 colunas e retorna o jogador ganhador, caso haja algum:
+
+    # -- tictactoe/game.py --
 
     def check_rows_n_cols_ (self):
         for i in range(3):
@@ -123,6 +125,8 @@ colunas e retorna o jogador ganhador, caso haja algum:
 Analogamente, a seguinte função verifica se há algum ganhador em
 alguma das duas diagonais:
 
+    # -- tictactoe/game.py --
+
     def check_diagonals_ (self):
         data = set([self.state[0], self.state[4], self.state[8]])
         if self.has_winner_(data):
@@ -133,6 +137,8 @@ alguma das duas diagonais:
             return data.pop()
 
 Ficou faltando o método auxiliar `has_winner_`, descrito a seguir:
+
+    # -- tictactoe/game.py --
 
     def has_winner_ (self, s):
         return len(s) == 1 and s != set([None])
@@ -175,6 +181,8 @@ mais importante é não deixar essas informação visível no seu
 repositório de código. E como podemos ler essa informação? Muito
 simples:
 
+    # -- tictactoe/db.py --
+
     def read_env ():
         try:
             with open(os.path.expanduser("~/etc/tictactoe-config.json"), "r") as fh:
@@ -186,6 +194,8 @@ A função acima tenta ler um arquivo de configuração e caso contrário
 retorna um dicionário vazio. Desta forma, podemos usar o mesmo código
 no nosso ambiente de desenvolvimento ou nas instâncias do Jelastic:
 
+    # -- tictactoe/db.py --
+    
     def instance ():
         env = read_env()
         return redis.Redis(db = env.get("REDIS_DB", 0),
@@ -205,9 +215,34 @@ recursos, detalhados a seguir:
 
     * /show/<game-id>/winner: mostra o ganhador do um determinado jogo;
 
-Não vou incluir todo o código aqui, mas a título de exemplo, veja a função do recurso */new*:
+Não vou incluir todo o código aqui, mas a título de exemplo, veja a
+função do recurso */new*:
 
+    # -- application.py --
+    
     @application.route("/new", methods=["POST"])
     def new ():
         key = db.create(db.instance())
         return(key, 201, {"content-type": "text/plain; charset=utf8"})
+
+Nenhuma surpresa aqui, apenas código flask. Com tudo pronto e o
+projeto publicado, podemos finalmente testar nosso joguinho:
+
+    $ game=$(curl -s -X POST http://env-9190458.jelasticlw.com.br/new); echo $game
+    06d640c7-4954-4612-9220-d910ac8e7614
+
+    $ curl -d row=0 -d col=1 http://env-9190458.jelasticlw.com.br/play/$game
+       | x |  
+    ---+---+---
+       |   |  
+    ---+---+---
+       |   |  
+
+    $ curl -d row=2 -d col=0 http://env-9190458.jelasticlw.com.br/play/$game
+       | x |  
+    ---+---+---
+       |   |  
+    ---+---+---
+     o |   |  
+
+E por aí vai!
