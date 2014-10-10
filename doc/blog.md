@@ -131,13 +131,60 @@ Ficou faltando o método auxiliar `has_winner_`, descrito a seguir:
     def has_winner_ (self, s):
         return len(s) == 1 and s != set([None])
 
-Com isso temos um modelo básico do jogo da velha. Foram omitidas
-algumas linhas principalmente relacionadas a manter a invariante do
-jogo.
-
 Outro módulo bem importante é o `tictactoe.db` que persiste os
 jogos. Além disso ele mostra como definir e usar um arquivo de
-configuração no Jelastic.
+configuração no Jelastic. No momento que criamos a instância de Redis
+este foi configurado automaticamente. Portanto, precisamos injetar
+essas informações no código de alguma maneira. Para tanto, podemos
+acessar nossa instância e configurar essas informações ao invés de
+deixá-las disponíveis no repositório git:
+
+    $ ssh 10207@gate.jelasticlw.com.br -p 3022
+    Please select the required environment available for dgvncsz0f@gmail.com
+       0. Quit
+       1. Refresh
+       2. env-9190458.jelasticlw.com.br                               Running
+     
+    Enter [0-2]: 2
+
+    Please select the required container provisioned for the 'env-9190458.jelasticlw.com.br' environment.
+          Node name                               nodeid    LAN IP
+       0. Back
+       1. Refresh
+       2. Apache-2.2                              31402    10.70.9.150
+       3. Redis-2.6                               31424    10.70.11.237
+     
+    Enter [0-3]: 2
+
+    $ cat ~/etc/tictactoe-config.json 
+    {"REDIS_HOST": "redis-env-9190458.jelasticlw.com.br",
+     "REDIS_POST": 6379,
+     "REDIS_DB": 0,
+     "REDIS_PASS": "..."
+    }
+
+Você pode configurar esse arquivo de muitas maneiras diferentes. O
+mais importante é não deixar essas informação visível no seu
+repositório de código. E como podemos ler essa informação? Muito
+simples:
+
+    def read_env ():
+        try:
+            with open(os.path.expanduser("~/etc/tictactoe-config.json"), "r") as fh:
+                return json.loads(fh.read(1024))
+        except IOError:
+            return {}
+
+A função acima tenta ler um arquivo de configuração e caso contrário
+retorna um dicionário vazio. Desta forma, podemos usar o mesmo código
+no nosso ambiente de desenvolvimento ou nas instâncias do Jelastic:
+
+    def instance ():
+        env = read_env()
+        return redis.Redis(db = env.get("REDIS_DB", 0),
+                           host = env.get("REDIS_HOST", "127.0.0.1"),
+                           port = env.get("REDIS_POST", 6379),
+                           password = env.get("REDIS_PASS"))
 
 É chegada a hora de implementar a *API REST*. Vamos definir 4
 recursos, detalhados a seguir:
