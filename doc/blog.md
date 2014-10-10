@@ -2,9 +2,10 @@ jelastic e python na locaweb
 ============================
 
 Essa semana me foi dado a tarefa de testar o suporte a python no
-Jelastic da locaweb. Nada muito sofisticado, apenas criar uma
-aplicação web e relatar a experiência. Será bem interessante pois é o
-meu primeiro contato com o Jelastic.
+[Jelastic](https://app.jelasticlw.com.br/) da locaweb. Nada muito
+sofisticado, apenas criar uma aplicação web e relatar a
+experiência. Será bem interessante pois é o meu primeiro contato com o
+Jelastic.
 
 Para quem ainda não conhece, o Jelastic é um PaaS (do inglês
 *Plataform As A Service*) que permite criar e gerenciar os serviços
@@ -15,20 +16,21 @@ de botão. Propaganda a parte, vamos ao projeto.
 
 Minha ideia foi criar uma *API REST* para o famoso e antigo jogo da
 velha. É um jogo com regras simples que dispensam comentários, mas
-caso alguém tenha esquecido de como funciona o artigo da Wikipedia [1]
-é uma boa referência.
+caso alguém tenha esquecido de como funciona o
+[artigo da Wikipedia](http://pt.wikipedia.org/wiki/Jogo_da_velha) é
+uma boa referência.
 
-Vou começar criando um projeto no github [2]. Não é necessário visto
-que existem outros métodos de publicação mas simplifica
-consideravelmente todo o processo. Todo o código deste artigo está
-publicado neste repositório e pode ser usado como referência:
+Vou começar criando um projeto no github. Não é necessário visto que
+existem outros métodos de publicação mas simplifica consideravelmente
+todo o processo. Todo o código deste artigo está publicado neste
+repositório e pode ser usado como referência:
 
     $ git clone https://github.com/dgvncsz0f/tic-tac-toe.git
 
-Neste projeto específico vou usar *flask* [3], que é um *framework*
-leve para criar serviços HTTP. Vou deixá-lo no repositório, tornando-o
-auto-contido, ou seja, o projeto já contém todas as dependências que
-necessita para ser executado:
+Neste projeto específico vou usar *[flask](http://flask.pocoo.org)*,
+que é um *framework* leve para criar serviços HTTP. Vou deixá-lo no
+repositório, tornando-o auto-contido, ou seja, o projeto já contém
+todas as dependências que necessita para ser executado:
 
     $ pip install --target vendor flask
     $ pip install --target vendor redis
