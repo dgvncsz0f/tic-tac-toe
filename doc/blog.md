@@ -2,16 +2,16 @@ jelastic python
 ===============
 
 Essa semana me foi dado a tarefa de testar o suporte a python no
-Jelastic da locaweb. Nada muito rebuscado, apenas criar uma aplicação
-web e relatar a experiência. Será bem interessante pois será o meu
-primeiro contato com o Jelastic.
+Jelastic da locaweb. Nada muito sofisticado, apenas criar uma
+aplicação web e relatar a experiência. Será bem interessante pois é o
+meu primeiro contato com o Jelastic.
 
 Para quem ainda não conhece, o Jelastic é um PaaS (do inglês
 *Plataform As A Service*) que permite criar e gerenciar os serviços
 necessários para publicar seus projetos Php, Java, Ruby e agora
 Python. Além da aplicação em si, também é possível gerenciar bancos
-dados, cache e balanceadores de carga. Tudo isso com alguns cliques de
-botão. Propaganda a parte, vamos ao projeto.
+dados, caches e balanceadores de carga. Tudo isso com alguns cliques
+de botão. Propaganda a parte, vamos ao projeto.
 
 Minha ideia foi criar uma *API REST* para o famoso e antigo jogo da
 velha. É um jogo com regras simples que dispensam comentários, mas
@@ -33,10 +33,10 @@ necessita para ser executado:
     $ pip install --target vendor flask
     $ pip install --target vendor redis
 
-Feito isso é hora de criar a aplicação. Agora vou apenas definir o
+Feito isso é hora de criar a aplicação. Agora vamos apenas definir o
 esqueleto, sem adicionar nenhuma funcionalidade:
 
-    #!/usr/bin/python
+    # -- application.py --
      
     import os
     import sys
@@ -61,8 +61,9 @@ python. Assim, o interpretador será capaz de encontrar o *flask*,
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "vendor"))
 
-A partir daí, já podemos testar nosso código. Basta executar o módulo
-que um servidor *HTTP* é iniciado e começa a servir as requisições.
+O resto é código padrão *flask*. A partir daí, somos capazes de testar
+e publicar nosso projeto. Basta executar o módulo que um servidor
+*HTTP* é iniciado e começa a servir as requisições.
 
     $ python2 application
     * Running on http://127.0.0.1:5000/
@@ -70,30 +71,35 @@ que um servidor *HTTP* é iniciado e começa a servir as requisições.
     $ curl http://127.0.0.1:5000/
     okie dokie
 
-Hora de publicar este código no Jelastic. Em primeiro lugar criamos o
-ambiente seguido pelo projeto. O ambiente permite o usuário escolher a
-versão do python que se deseja usar (neste caso 2.7) e o projeto
-determina como o código é publicado. Neste caso específico o próprio
-Jelastic continuamente monitora o github e já faz a publicação sempre
-que houver uma mudança no código, o que é bem convenientemente.
+Vamos fazer agora uma pequena pausa para publicar este código no
+Jelastic. Em primeiro lugar criamos o ambiente seguido pelo projeto. O
+ambiente permite o usuário escolher a versão do python que se deseja
+usar (neste caso 2.7) bem como os serviços associados (como o Redis) e
+o projeto determina como o código é publicado. O Jelastic é capaz de
+obter o código a partir do github, instalando eventuais atualizações
+automaticamente, o que é bem conveniente. Este foi o motivo pelo qual
+escolhemos usar o github no início.
 
-Este projeto também requer um banco de dados para manter estado dos
-jogos em andamento, que neste caso será o redis.
+Como este projeto também requer um banco de dados para manter estado
+dos jogos em andamento, também vamos instalar um redis nesse ambiente:
 
     [[ screenshot ]]
 
 Tudo muito simples e rápido até agora e já temos o ambiente necessário
 para publicar o jogo: um servidor com suporte a especificação *wsgi*
-do python e um servidor de redis.
+do python e um servidor de redis. Feito isso, podemos executar:
 
-O módulo mais importante é o `tictactoe.game`. Este módulo contém o
-estado do jogo e métodos que permitem modificar ou verificar o estado
-atual.
+    $ curl http://env-9190458.jelasticlw.com.br/
+    okie dokie
 
-Este estado é mantido como um `array` de 9 posições. Ao longo do
+Retomando ao código, o módulo mais importante é o
+`tictactoe.game`. Este módulo contém o estado do jogo e métodos que
+permitem modificar ou verificar o estado atual.
+
+O estado do jogo é mantido como um `array` de 9 posições. Ao longo do
 tempo, cada item desta estrutura pode assumir três posições: `'x'`,
 `'o`' ou `None` que significam respectivamente jogador 1, jogador 2 ou
-área em aberto. Inicialmente todos os valores são `None`:
+posição em aberto. Inicialmente todos os valores são `None`:
 
     def __init__ (self, state=None):
         if state is None:
@@ -132,12 +138,13 @@ Ficou faltando o método auxiliar `has_winner_`, descrito a seguir:
         return len(s) == 1 and s != set([None])
 
 Outro módulo bem importante é o `tictactoe.db` que persiste os
-jogos. Além disso ele mostra como definir e usar um arquivo de
-configuração no Jelastic. No momento que criamos a instância de Redis
-este foi configurado automaticamente. Portanto, precisamos injetar
-essas informações no código de alguma maneira. Para tanto, podemos
-acessar nossa instância e configurar essas informações ao invés de
-deixá-las disponíveis no repositório git:
+jogos. Além disso, é um bom exemplo de como definir e usar um arquivo
+de configuração no Jelastic. No momento que criamos a instância de
+Redis este foi configurado automaticamente. Portanto, precisamos
+injetar essas informações no código, isto é, endereço IP, porta e
+senha, de alguma maneira. Para tanto, podemos acessar nossa instância
+e configurar essas informações ao invés de deixá-las disponíveis no
+repositório git:
 
     $ ssh 10207@gate.jelasticlw.com.br -p 3022
     Please select the required environment available for dgvncsz0f@gmail.com
@@ -197,3 +204,10 @@ recursos, detalhados a seguir:
     * /show/<game-id>: mostra o estado de um determinado;
 
     * /show/<game-id>/winner: mostra o ganhador do um determinado jogo;
+
+Não vou incluir todo o código aqui, mas a título de exemplo, veja a função do recurso */new*:
+
+    @application.route("/new", methods=["POST"])
+    def new ():
+        key = db.create(db.instance())
+        return(key, 201, {"content-type": "text/plain; charset=utf8"})
